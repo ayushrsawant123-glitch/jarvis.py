@@ -59,6 +59,50 @@
       background: #1c92d2;
       color: #fff;
     }
+    #chat-panel {
+      width: min(520px, calc(100vw - 32px));
+      margin: 20px auto 0;
+      padding: 14px;
+      border: 1px solid rgba(0, 255, 247, 0.45);
+      border-radius: 8px;
+      background: rgba(8, 20, 28, 0.72);
+      box-sizing: border-box;
+    }
+    #chat-log {
+      min-height: 44px;
+      max-height: 120px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      color: #fff;
+      text-align: left;
+    }
+    #chat-log p { margin: 6px 0; overflow-wrap: anywhere; }
+    #chat-form { display: flex; gap: 8px; }
+    #chat-input {
+      min-width: 0;
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #5a7b86;
+      border-radius: 4px;
+      background: #102630;
+      color: #fff;
+      font: inherit;
+    }
+    #chat-form button {
+      padding: 0 16px;
+      border: 0;
+      border-radius: 4px;
+      background: #00fff7;
+      color: #102027;
+      font: inherit;
+      cursor: pointer;
+    }
+    #chat-status { min-height: 1.2em; margin: 8px 0 0; color: #ffd166; }
+    @media (max-height: 760px) {
+      body { height: auto; min-height: 100vh; overflow: auto; }
+      .container { margin: 24px 0; }
+      #mic-visualizer { height: 140px; }
+    }
   </style>
   <link href="https://fonts.googleapis.com/css?family=Orbitron:700" rel="stylesheet">
 </head>
@@ -69,11 +113,53 @@
     <canvas id="mic-visualizer" width="400" height="200"></canvas>
     <button id="start-btn">Start Listening</button>
     <button onclick="fetch('/start_jarvis', {method:'POST'}).then(r=>r.json()).then(d=>alert(d.status));">Start JARVIS</button>
+    <section id="chat-panel" aria-label="Text chat">
+      <div id="chat-log" aria-live="polite"></div>
+      <form id="chat-form">
+        <input id="chat-input" type="text" placeholder="Type a message..." aria-label="Message" autocomplete="off" required>
+        <button type="submit">Send</button>
+      </form>
+      <p id="chat-status" role="status"></p>
+    </section>
   </div>
   <script>
     const canvas = document.getElementById('mic-visualizer');
     const ctx = canvas.getContext('2d');
     let audioContext, analyser, dataArray, source;
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatLog = document.getElementById('chat-log');
+    const chatStatus = document.getElementById('chat-status');
+
+    function addChatMessage(speaker, text) {
+      const line = document.createElement('p');
+      line.textContent = `${speaker}: ${text}`;
+      chatLog.appendChild(line);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    chatForm.addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const message = chatInput.value.trim();
+      if (!message) return;
+
+      addChatMessage('You', message);
+      chatInput.value = '';
+      chatStatus.textContent = 'JARVIS is responding...';
+      try {
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({message})
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Message could not be sent.');
+        addChatMessage('JARVIS', data.reply);
+        chatStatus.textContent = '';
+      } catch (error) {
+        chatStatus.textContent = error.message;
+      }
+    });
 
     function drawVisualizer() {
       requestAnimationFrame(drawVisualizer);
@@ -131,8 +217,6 @@
       source.connect(analyser);
       drawVisualizer();
     };
-    import webbrowser
-    webbrowser.open("c:/jarvis.py/3.py/main.html")
   </script>
 </body>
 </html>

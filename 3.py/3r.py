@@ -356,6 +356,20 @@ def start_jarvis_route():
     threading.Thread(target=jarvis).start()
     return jsonify({'status': 'JARVIS started!'})
 
+@app.route('/chat', methods=['POST'])
+def chat_route():
+    data = request.get_json(silent=True) or {}
+    message = data.get('message', '').strip()
+    if not message:
+        return jsonify({'error': 'Enter a message first.'}), 400
+
+    normalized_message = message.lower()
+    reply = next(
+        (response for keyword, response in chatbot_responses.items() if keyword in normalized_message),
+        "I don't know that one yet. Try hello, how are you, who are you, or thank you.",
+    )
+    return jsonify({'reply': reply})
+
 if __name__ == "__main__":
     import webbrowser
     threading.Timer(1.5, lambda: webbrowser.open("http://127.0.0.1:5000/")).start()
