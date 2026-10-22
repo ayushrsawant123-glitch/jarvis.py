@@ -209,6 +209,27 @@
     .step span { display: block; color: var(--muted); font-size: 12px; line-height: 1.55; }
     .note { margin: 21px 0 0; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.6; }
     footer { padding-top: 25px; color: #69758e; font-size: 11px; text-align: center; }
+    .feature-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 18px; }
+    .feature-card { min-width: 0; padding: 23px; }
+    .feature-card h2 { margin-bottom: 16px; }
+    .feature-card-wide { grid-column: 1 / -1; }
+    .form-row { display: flex; flex-wrap: wrap; gap: 9px; margin: 10px 0; }
+    .field { min-width: 0; flex: 1 1 150px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 9px; background: #0b1325; color: #f4f7ff; font: inherit; font-size: 12px; }
+    .field:focus { outline: 2px solid var(--cyan); outline-offset: 1px; }
+    .field-label { display: grid; flex: 1 1 145px; gap: 7px; color: var(--muted); font-size: 11px; }
+    .feature-list { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+    .feature-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 9px; color: #dce5f7; font-size: 12px; line-height: 1.5; }
+    .feature-list a { color: var(--cyan); }
+    .feature-list small { display: block; color: var(--muted); }
+    .item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .mini-button { padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: #dce5f7; cursor: pointer; font: inherit; font-size: 11px; }
+    .mini-button:hover { border-color: var(--cyan); }
+    .empty-state { color: var(--muted); font-size: 12px; }
+    .check-label { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 12px; }
+    .command-form { display: flex; gap: 9px; }
+    .command-form .field { flex: 1; }
+    #command-result, #weather-result { min-height: 20px; margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    @media (max-width: 700px) { .feature-grid { grid-template-columns: 1fr; } .feature-card-wide { grid-column: auto; } }
 
     @media (max-width: 700px) {
       .page { width: min(100% - 28px, 540px); padding-top: 20px; }
@@ -241,7 +262,7 @@
     <section class="intro" aria-labelledby="page-title">
       <div class="eyebrow">Your workspace</div>
       <h1 id="page-title">How can I help?</h1>
-      <p>Start your voice assistant or preview your microphone input. Your assistant will ask for its voice password when it starts.</p>
+      <p>Use voice or text commands, schedule reminders without interrupting JARVIS, and manage your day from one dashboard.</p>
     </section>
 
     <section class="dashboard" aria-label="Assistant controls">
@@ -286,7 +307,69 @@
       </aside>
     </section>
 
-    <footer>JARVIS 2.0 · Local assistant dashboard</footer>
+    <section class="feature-grid" aria-label="Assistant features">
+      <article class="card feature-card feature-card-wide">
+        <h2>Ask JARVIS</h2>
+        <form class="command-form" id="command-form">
+          <input class="field" id="command-input" type="text" placeholder="Try: remind me in 5 minutes to stretch" aria-label="Command">
+          <button class="button button-secondary" id="command-mic" type="button" aria-label="Speak a command">🎙 Speak</button>
+          <button class="button button-primary" type="submit">Send</button>
+        </form>
+        <p id="command-result" role="status" aria-live="polite"></p>
+        <p class="small-label">Voice commands: “add task buy milk”, “list tasks”, “complete buy milk”, “add event dentist”, “weather in Paris”, “news”, or “next track”.</p>
+      </article>
+
+      <article class="card feature-card">
+        <h2>Weather</h2>
+        <form class="form-row" id="weather-form">
+          <input class="field" id="weather-city" type="text" placeholder="City" aria-label="Weather city">
+          <button class="button button-secondary" type="submit">Get weather</button>
+        </form>
+        <p id="weather-result" role="status" aria-live="polite"></p>
+      </article>
+
+      <article class="card feature-card">
+        <div class="section-heading"><h2>World news</h2><button class="mini-button" id="refresh-news" type="button">Refresh</button></div>
+        <ul class="feature-list" id="news-list"><li class="empty-state">Loading headlines…</li></ul>
+      </article>
+
+      <article class="card feature-card feature-card-wide">
+        <h2>Calendar &amp; to-do list</h2>
+        <form class="form-row" id="task-form">
+          <input class="field" id="task-title" type="text" placeholder="Task or event name" aria-label="Task or event name" required>
+          <select class="field" id="task-kind" aria-label="Item type"><option value="task">To-do</option><option value="event">Calendar event</option></select>
+          <input class="field" id="task-due" type="datetime-local" aria-label="Due date and time">
+          <button class="button button-primary" type="submit">Add item</button>
+        </form>
+        <ul class="feature-list" id="task-list"></ul>
+      </article>
+
+      <article class="card feature-card feature-card-wide">
+        <h2>Personal settings</h2>
+        <form id="settings-form">
+          <div class="form-row">
+            <label class="field-label">Wake word<input class="field" id="setting-wake-word" type="text" maxlength="40" required></label>
+            <label class="field-label">Weather city<input class="field" id="setting-city" type="text" maxlength="100" required></label>
+            <label class="field-label">Voice<select class="field" id="setting-voice"></select></label>
+            <label class="field-label">Speech speed <output id="speed-value"></output><input class="field" id="setting-speed" type="range" min="80" max="300" step="5"></label>
+          </div>
+          <div class="form-row">
+            <label class="check-label"><input id="setting-offline" type="checkbox"> Use offline speech recognition (Vosk)</label>
+            <label class="field-label">Vosk model folder<input class="field" id="setting-model" type="text"></label>
+            <button class="button button-secondary" type="submit">Save settings</button>
+          </div>
+        </form>
+        <p class="message" id="settings-message" role="status" aria-live="polite"></p>
+        <p class="small-label">Offline voice requires the Vosk Python package and an extracted English model folder. Install with <code>pip install vosk</code>, then set the model folder above.</p>
+      </article>
+
+      <article class="card feature-card feature-card-wide">
+        <div class="section-heading"><h2>Command history</h2><span class="small-label" id="history-caption">Latest activity</span></div>
+        <ul class="feature-list" id="history-list"><li class="empty-state">No activity yet.</li></ul>
+      </article>
+    </section>
+
+    <footer>JARVIS · Local assistant dashboard · Weather: Open-Meteo · News: BBC World RSS</footer>
   </main>
 
   <script>
@@ -417,6 +500,207 @@
     window.addEventListener("resize", resizeCanvas);
     window.addEventListener("beforeunload", stopVisualizer);
     resizeCanvas();
+
+    const commandForm = document.getElementById("command-form");
+    const commandInput = document.getElementById("command-input");
+    const commandResult = document.getElementById("command-result");
+    const taskList = document.getElementById("task-list");
+    const historyList = document.getElementById("history-list");
+    const settingsMessage = document.getElementById("settings-message");
+    const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[character]);
+
+    async function requestJson(url, options = {}) {
+      const response = await fetch(url, options);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "The request could not be completed.");
+      return result;
+    }
+
+    async function loadTasks() {
+      const items = await requestJson("/api/tasks");
+      taskList.innerHTML = items.length ? items.map((item) => `
+        <li><span>${escapeHtml(item.title)}${item.due_at ? `<small>${escapeHtml(new Date(item.due_at).toLocaleString())}</small>` : ""}</span>
+          <span class="item-actions">${item.completed ? "<small>Completed</small>" : `<button class="mini-button" data-complete="${item.id}">Complete</button>`}
+          <button class="mini-button" data-delete="${item.id}" aria-label="Delete ${escapeHtml(item.title)}">Delete</button></span></li>`).join("")
+        : '<li class="empty-state">No tasks or calendar events yet.</li>';
+    }
+
+    async function loadHistory() {
+      const entries = await requestJson("/api/history");
+      historyList.innerHTML = entries.length ? entries.map((entry) => `
+        <li><span>${escapeHtml(entry.command)}<small>${escapeHtml(entry.response)} · ${escapeHtml(entry.source)} · ${new Date(entry.created_at).toLocaleString()}</small></span>
+        <span class="small-label">${escapeHtml(entry.status)}</span></li>`).join("")
+        : '<li class="empty-state">No activity yet.</li>';
+    }
+
+    async function loadNews() {
+      const list = document.getElementById("news-list");
+      try {
+        const headlines = await requestJson("/api/news");
+        list.innerHTML = headlines.length ? headlines.map((item) => {
+          const link = /^https:\/\//i.test(item.link) ? item.link : "#";
+          return `<li><a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a></li>`;
+        }
+        ).join("") : '<li class="empty-state">No headlines are available.</li>';
+      } catch (error) {
+        list.innerHTML = `<li class="empty-state">${escapeHtml(error.message)} Check your internet connection.</li>`;
+      }
+    }
+
+    async function loadSettings() {
+      const settings = await requestJson("/api/settings");
+      document.getElementById("setting-wake-word").value = settings.wake_word;
+      document.getElementById("setting-city").value = settings.city;
+      document.getElementById("weather-city").value = settings.city;
+      document.getElementById("setting-speed").value = settings.speech_rate;
+      document.getElementById("speed-value").value = `${settings.speech_rate} wpm`;
+      document.getElementById("setting-offline").checked = settings.offline_mode === "true";
+      document.getElementById("setting-model").value = settings.offline_model_path;
+      document.getElementById("setting-voice").innerHTML = '<option value="">System default</option>' + settings.voices.map((voice) =>
+        `<option value="${escapeHtml(voice.id)}">${escapeHtml(voice.name)}</option>`
+      ).join("");
+      document.getElementById("setting-voice").value = settings.voice_id;
+    }
+
+    async function refreshAssistantStatus() {
+      try {
+        const state = await requestJson("/api/status");
+        assistantStatus.dataset.state = state.error ? "error" : state.active ? "active" : "idle";
+        assistantStatusText.textContent = state.error ? "Assistant issue" : state.listening ? "Listening" : state.active ? "Assistant active" : "Assistant offline";
+        if (state.error) {
+          assistantMessage.textContent = state.error;
+          assistantMessage.dataset.state = "error";
+        }
+        assistantButton.disabled = Boolean(state.active);
+        assistantButton.querySelector(".button-content span:last-child").textContent = state.active ? "JARVIS is running" : "Start JARVIS";
+      } catch (error) {
+        assistantStatus.dataset.state = "error";
+        assistantStatusText.textContent = "Server unavailable";
+      }
+    }
+
+    commandForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      commandResult.textContent = "Working…";
+      try {
+        const result = await requestJson("/api/command", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: commandInput.value })
+        });
+        commandResult.textContent = result.response;
+        commandInput.value = "";
+        await Promise.all([loadTasks(), loadHistory()]);
+      } catch (error) {
+        commandResult.textContent = error.message;
+      }
+    });
+
+    document.getElementById("command-mic").addEventListener("click", () => {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        commandResult.textContent = "Voice input is not supported in this browser. Use the offline Vosk mode in the running JARVIS assistant or type a command.";
+        return;
+      }
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.onresult = (event) => {
+        commandInput.value = event.results[0][0].transcript;
+        commandForm.requestSubmit();
+      };
+      recognition.onerror = (event) => {
+        commandResult.textContent = event.error === "not-allowed"
+          ? "Microphone access was denied. Allow microphone access in browser settings."
+          : `Voice input failed (${event.error}). Try again or type a command.`;
+      };
+      recognition.start();
+    });
+
+    document.getElementById("weather-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const city = document.getElementById("weather-city").value.trim();
+      const output = document.getElementById("weather-result");
+      output.textContent = "Loading weather…";
+      try {
+        const weather = await requestJson(`/api/weather?city=${encodeURIComponent(city)}`);
+        output.textContent = `${weather.city}, ${weather.country}: ${weather.condition}, ${weather.temperature}° (feels like ${weather.feels_like}°), humidity ${weather.humidity}%.`;
+      } catch (error) {
+        output.textContent = error.message;
+      }
+    });
+
+    document.getElementById("refresh-news").addEventListener("click", loadNews);
+    document.getElementById("task-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const dueInput = document.getElementById("task-due").value;
+      try {
+        await requestJson("/api/tasks", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: document.getElementById("task-title").value,
+            kind: document.getElementById("task-kind").value,
+            due_at: dueInput ? new Date(dueInput).toISOString() : ""
+          })
+        });
+        event.target.reset();
+        await loadTasks();
+      } catch (error) {
+        commandResult.textContent = error.message;
+      }
+    });
+
+    taskList.addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-complete], button[data-delete]");
+      if (!button) return;
+      const id = button.dataset.complete || button.dataset.delete;
+      try {
+        await requestJson(`/api/tasks/${id}`, button.dataset.complete
+          ? { method: "PATCH" } : { method: "DELETE" });
+        await loadTasks();
+      } catch (error) {
+        commandResult.textContent = error.message;
+      }
+    });
+
+    document.getElementById("setting-speed").addEventListener("input", (event) => {
+      document.getElementById("speed-value").value = `${event.target.value} wpm`;
+    });
+    document.getElementById("settings-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      settingsMessage.textContent = "Saving…";
+      try {
+        const result = await requestJson("/api/settings", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            wake_word: document.getElementById("setting-wake-word").value,
+            city: document.getElementById("setting-city").value,
+            speech_rate: Number(document.getElementById("setting-speed").value),
+            voice_id: document.getElementById("setting-voice").value,
+            offline_mode: document.getElementById("setting-offline").checked,
+            offline_model_path: document.getElementById("setting-model").value
+          })
+        });
+        settingsMessage.textContent = result.status;
+        settingsMessage.dataset.state = "success";
+      } catch (error) {
+        settingsMessage.textContent = error.message;
+        settingsMessage.dataset.state = "error";
+      }
+    });
+
+    Promise.all([loadTasks(), loadHistory(), loadSettings()]).catch((error) => {
+      assistantMessage.textContent = `Dashboard setup failed: ${error.message}`;
+      assistantMessage.dataset.state = "error";
+    });
+    loadNews();
+    refreshAssistantStatus();
+    window.setInterval(() => {
+      refreshAssistantStatus();
+      loadHistory().catch((error) => {
+        document.getElementById("history-caption").textContent = error.message;
+      });
+    }, 5000);
   </script>
 </body>
 </html>
