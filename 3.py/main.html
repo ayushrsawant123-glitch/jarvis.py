@@ -241,162 +241,106 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
     }
+    #chat-panel {
+      width: min(520px, calc(100vw - 32px));
+      margin: 20px auto 0;
+      padding: 14px;
+      border: 1px solid rgba(0, 255, 247, 0.45);
+      border-radius: 8px;
+      background: rgba(8, 20, 28, 0.72);
+      box-sizing: border-box;
+    }
+    #chat-log {
+      min-height: 44px;
+      max-height: 120px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      color: #fff;
+      text-align: left;
+    }
+    #chat-log p { margin: 6px 0; overflow-wrap: anywhere; }
+    #chat-form { display: flex; gap: 8px; }
+    #chat-input {
+      min-width: 0;
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #5a7b86;
+      border-radius: 4px;
+      background: #102630;
+      color: #fff;
+      font: inherit;
+    }
+    #chat-form button {
+      padding: 0 16px;
+      border: 0;
+      border-radius: 4px;
+      background: #00fff7;
+      color: #102027;
+      font: inherit;
+      cursor: pointer;
+    }
+    #chat-status { min-height: 1.2em; margin: 8px 0 0; color: #ffd166; }
+    @media (max-height: 760px) {
+      body { height: auto; min-height: 100vh; overflow: auto; }
+      .container { margin: 24px 0; }
+      #mic-visualizer { height: 140px; }
+    }
   </style>
 </head>
 <body>
-  <main class="page">
-    <header>
-      <div class="brand">
-        <div class="brand-mark" aria-hidden="true">J</div>
-        <div>
-          <div class="brand-name">JARVIS</div>
-          <div class="brand-caption">Personal assistant</div>
-        </div>
-      </div>
-      <div class="status-pill" id="assistant-status" data-state="idle" role="status" aria-live="polite">
-        <span class="status-dot" aria-hidden="true"></span>
-        <span id="assistant-status-text">Assistant offline</span>
-      </div>
-    </header>
-
-    <section class="intro" aria-labelledby="page-title">
-      <div class="eyebrow">Your workspace</div>
-      <h1 id="page-title">How can I help?</h1>
-      <p>Use voice or text commands, schedule reminders without interrupting JARVIS, and manage your day from one dashboard.</p>
+  <div class="container">
+    <h1>JARVIS 2.0</h1>
+    <div class="subtitle">Say something to see the voice waves!</div>
+    <canvas id="mic-visualizer" width="400" height="200"></canvas>
+    <button id="start-btn">Start Listening</button>
+    <button onclick="fetch('/start_jarvis', {method:'POST'}).then(r=>r.json()).then(d=>alert(d.status));">Start JARVIS</button>
+    <section id="chat-panel" aria-label="Text chat">
+      <div id="chat-log" aria-live="polite"></div>
+      <form id="chat-form">
+        <input id="chat-input" type="text" placeholder="Type a message..." aria-label="Message" autocomplete="off" required>
+        <button type="submit">Send</button>
+      </form>
+      <p id="chat-status" role="status"></p>
     </section>
-
-    <section class="dashboard" aria-label="Assistant controls">
-      <div class="card control-card">
-        <div class="section-heading">
-          <h2>Voice controls</h2>
-          <span class="small-label" id="visualizer-state">Visualizer off</span>
-        </div>
-        <div class="visualizer">
-          <canvas id="mic-visualizer" aria-label="Microphone audio visualization"></canvas>
-          <div class="mic-core" aria-hidden="true">MIC</div>
-          <div class="visualizer-caption" id="visualizer-caption">Microphone preview is off</div>
-        </div>
-        <div class="actions">
-          <button class="button button-primary" id="assistant-button" type="button">
-            <span class="button-content"><span aria-hidden="true">▶</span><span>Start JARVIS</span></span>
-          </button>
-          <button class="button button-secondary" id="visualizer-button" type="button">
-            <span class="button-content"><span aria-hidden="true">♫</span><span>Preview microphone</span></span>
-          </button>
-        </div>
-        <p class="message" id="assistant-message" role="status" aria-live="polite"></p>
-      </div>
-
-      <aside class="card side-card">
-        <h2>Get started</h2>
-        <ol class="steps">
-          <li class="step">
-            <span class="step-number">1</span>
-            <div><strong>Start the assistant</strong><span>JARVIS will begin listening in the app process.</span></div>
-          </li>
-          <li class="step">
-            <span class="step-number">2</span>
-            <div><strong>Say your password</strong><span>Speak “open jarvis” when prompted.</span></div>
-          </li>
-          <li class="step">
-            <span class="step-number">3</span>
-            <div><strong>Give a voice command</strong><span>Ask for the time, a search, a reminder, and more.</span></div>
-          </li>
-        </ol>
-        <p class="note">Microphone preview is optional and uses your browser microphone. Turn it off before starting JARVIS if both apps compete for microphone access.</p>
-      </aside>
-    </section>
-
-    <section class="feature-grid" aria-label="Assistant features">
-      <article class="card feature-card feature-card-wide">
-        <h2>Ask JARVIS</h2>
-        <form class="command-form" id="command-form">
-          <input class="field" id="command-input" type="text" placeholder="Try: remind me in 5 minutes to stretch" aria-label="Command">
-          <button class="button button-secondary" id="command-mic" type="button" aria-label="Speak a command">🎙 Speak</button>
-          <button class="button button-primary" type="submit">Send</button>
-        </form>
-        <p id="command-result" role="status" aria-live="polite"></p>
-        <p class="small-label">Voice commands: “add task buy milk”, “list tasks”, “complete buy milk”, “add event dentist”, “weather in Paris”, “news”, or “next track”.</p>
-      </article>
-
-      <article class="card feature-card">
-        <h2>Weather</h2>
-        <form class="form-row" id="weather-form">
-          <input class="field" id="weather-city" type="text" placeholder="City" aria-label="Weather city">
-          <button class="button button-secondary" type="submit">Get weather</button>
-        </form>
-        <p id="weather-result" role="status" aria-live="polite"></p>
-      </article>
-
-      <article class="card feature-card">
-        <div class="section-heading"><h2>World news</h2><button class="mini-button" id="refresh-news" type="button">Refresh</button></div>
-        <ul class="feature-list" id="news-list"><li class="empty-state">Loading headlines…</li></ul>
-      </article>
-
-      <article class="card feature-card feature-card-wide">
-        <h2>Calendar &amp; to-do list</h2>
-        <form class="form-row" id="task-form">
-          <input class="field" id="task-title" type="text" placeholder="Task or event name" aria-label="Task or event name" required>
-          <select class="field" id="task-kind" aria-label="Item type"><option value="task">To-do</option><option value="event">Calendar event</option></select>
-          <input class="field" id="task-due" type="datetime-local" aria-label="Due date and time">
-          <button class="button button-primary" type="submit">Add item</button>
-        </form>
-        <ul class="feature-list" id="task-list"></ul>
-      </article>
-
-      <article class="card feature-card feature-card-wide">
-        <h2>Personal settings</h2>
-        <form id="settings-form">
-          <div class="form-row">
-            <label class="field-label">Wake word<input class="field" id="setting-wake-word" type="text" maxlength="40" required></label>
-            <label class="field-label">Weather city<input class="field" id="setting-city" type="text" maxlength="100" required></label>
-            <label class="field-label">Voice<select class="field" id="setting-voice"></select></label>
-            <label class="field-label">Speech speed <output id="speed-value"></output><input class="field" id="setting-speed" type="range" min="80" max="300" step="5"></label>
-          </div>
-          <div class="form-row">
-            <label class="check-label"><input id="setting-offline" type="checkbox"> Use offline speech recognition (Vosk)</label>
-            <label class="field-label">Vosk model folder<input class="field" id="setting-model" type="text"></label>
-            <button class="button button-secondary" type="submit">Save settings</button>
-          </div>
-        </form>
-        <p class="message" id="settings-message" role="status" aria-live="polite"></p>
-        <p class="small-label">Offline voice requires the Vosk Python package and an extracted English model folder. Install with <code>pip install vosk</code>, then set the model folder above.</p>
-      </article>
-
-      <article class="card feature-card feature-card-wide">
-        <div class="section-heading"><h2>Command history</h2><span class="small-label" id="history-caption">Latest activity</span></div>
-        <ul class="feature-list" id="history-list"><li class="empty-state">No activity yet.</li></ul>
-      </article>
-    </section>
-
-    <footer>JARVIS · Local assistant dashboard · Weather: Open-Meteo · News: BBC World RSS</footer>
-  </main>
-
+  </div>
   <script>
-    const canvas = document.getElementById("mic-visualizer");
-    const context = canvas.getContext("2d");
-    const visualizerButton = document.getElementById("visualizer-button");
-    const visualizerState = document.getElementById("visualizer-state");
-    const visualizerCaption = document.getElementById("visualizer-caption");
-    const assistantButton = document.getElementById("assistant-button");
-    const assistantMessage = document.getElementById("assistant-message");
-    const assistantStatus = document.getElementById("assistant-status");
-    const assistantStatusText = document.getElementById("assistant-status-text");
-    let audioContext;
-    let microphoneStream;
-    let analyser;
-    let animationFrame;
+    const canvas = document.getElementById('mic-visualizer');
+    const ctx = canvas.getContext('2d');
+    let audioContext, analyser, dataArray, source;
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatLog = document.getElementById('chat-log');
+    const chatStatus = document.getElementById('chat-status');
 
-    function resizeCanvas() {
-      const bounds = canvas.getBoundingClientRect();
-      const pixelRatio = window.devicePixelRatio || 1;
-      canvas.width = Math.round(bounds.width * pixelRatio);
-      canvas.height = Math.round(bounds.height * pixelRatio);
-      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-      if (!analyser) {
-        context.clearRect(0, 0, bounds.width, bounds.height);
-      }
+    function addChatMessage(speaker, text) {
+      const line = document.createElement('p');
+      line.textContent = `${speaker}: ${text}`;
+      chatLog.appendChild(line);
+      chatLog.scrollTop = chatLog.scrollHeight;
     }
+
+    chatForm.addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const message = chatInput.value.trim();
+      if (!message) return;
+
+      addChatMessage('You', message);
+      chatInput.value = '';
+      chatStatus.textContent = 'JARVIS is responding...';
+      try {
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({message})
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Message could not be sent.');
+        addChatMessage('JARVIS', data.reply);
+        chatStatus.textContent = '';
+      } catch (error) {
+        chatStatus.textContent = error.message;
+      }
+    });
 
     function drawVisualizer() {
       if (!analyser) return;
